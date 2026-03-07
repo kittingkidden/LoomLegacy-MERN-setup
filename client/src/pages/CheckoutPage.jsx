@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { ShieldCheck, CreditCard, Truck } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 const CheckoutPage = () => {
     const { cartItems, totalItems, subtotal, discount, total, clearCart } = useCart();
@@ -42,7 +43,7 @@ const CheckoutPage = () => {
                 shippingAddress: `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city} - ${formData.pincode}`
             };
 
-            const response = await fetch('http://localhost:5001/api/orders', {
+            const response = await fetch(`${API_URL}/api/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)

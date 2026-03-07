@@ -3,6 +3,7 @@ import { Package, User, MapPin, ChevronRight, Clock, CheckCircle, Heart, Key, Ed
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../../config';
 
 const BuyerDashboard = () => {
     const { user } = useAuth();
@@ -22,7 +23,7 @@ const BuyerDashboard = () => {
     const handleAddAddress = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`http://localhost:5001/api/users/${user.id}/addresses`, {
+            const res = await fetch(`${API_URL}/api/users/${user.id}/addresses`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newAddress)
@@ -40,7 +41,7 @@ const BuyerDashboard = () => {
 
     const handleDeleteAddress = async (addressId) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/users/${user.id}/addresses/${addressId}`, {
+            const res = await fetch(`${API_URL}/api/users/${user.id}/addresses/${addressId}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -58,11 +59,11 @@ const BuyerDashboard = () => {
             if (!user?.id) return;
             try {
                 // Fetch Orders
-                const orderRes = await fetch(`http://localhost:5001/api/orders/user/${user.id}`);
+                const orderRes = await fetch(`${API_URL}/api/orders/user/${user.id}`);
                 if (orderRes.ok) setOrders(await orderRes.json());
 
                 // Fetch Addresses
-                const addressRes = await fetch(`http://localhost:5001/api/users/${user.id}/addresses`);
+                const addressRes = await fetch(`${API_URL}/api/users/${user.id}/addresses`);
                 if (addressRes.ok) {
                     setAddresses(await addressRes.json());
                 } else if (user.addresses) {

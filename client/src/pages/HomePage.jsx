@@ -6,6 +6,7 @@ import { useProducts } from '../context/ProductContext';
 import ProductCard from '../components/ui/ProductCard';
 import SpinWheel from '../components/ui/SpinWheel';
 import MagneticButton from '../components/ui/MagneticButton';
+import { API_URL } from '../config';
 
 // Imported Images
 import heroModelImg from '../assets/images/hero_model.png';
@@ -41,7 +42,7 @@ const HomePage = () => {
     React.useEffect(() => {
         const fetchReviews = async () => {
             try {
-                const res = await fetch('http://localhost:5001/api/reviews/recent');
+                const res = await fetch(`${API_URL}/api/reviews/recent`);
                 if (res.ok) {
 
                     const data = await res.json();

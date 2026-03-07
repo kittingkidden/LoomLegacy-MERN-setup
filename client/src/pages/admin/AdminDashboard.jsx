@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Users, ShoppingBag, Shield, Search } from 'lucide-react';
+import { Users, ShoppingBag, Shield, Search, Trash2 } from 'lucide-react';
+import { API_URL } from '../../config';
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -10,7 +11,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/users');
+                const response = await fetch(`${API_URL}/api/users`);
                 if (response.ok) {
                     const data = await response.json();
                     setUsers(data);
@@ -32,7 +33,7 @@ const AdminDashboard = () => {
 
     const handleRoleChange = async (userId, newRole) => {
         try {
-            const response = await fetch(`http://localhost:5001/api/users/${userId}/role`, {
+            const response = await fetch(`${API_URL}/api/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role: newRole })
@@ -48,7 +49,7 @@ const AdminDashboard = () => {
     const handleDeleteUser = async (userId) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
         try {
-            const response = await fetch(`http://localhost:5001/api/users/${userId}`, {
+            const response = await fetch(`${API_URL}/api/users/${userId}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

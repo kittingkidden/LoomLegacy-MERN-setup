@@ -4,6 +4,7 @@ import { BarChart3, Package, Upload, Plus, Trash2, Edit, Search, Filter, ArrowUp
 import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../../config';
 
 import {
     BarChart,
@@ -62,7 +63,7 @@ const SellerDashboard = () => {
                 setSellerProducts(prodData);
 
                 // Fetch seller orders
-                const orderRes = await fetch(`http://localhost:5001/api/orders/seller/${user.id}`);
+                const orderRes = await fetch(`${API_URL}/api/orders/seller/${user.id}`);
                 if (orderRes.ok) {
                     const orderData = await orderRes.json();
                     setOrders(orderData);

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { API_URL } from '../config';
 
 const WishlistContext = createContext();
 
@@ -45,7 +46,7 @@ export const WishlistProvider = ({ children }) => {
         }
 
         try {
-            const res = await fetch(`http://localhost:5001/api/wishlist/toggle`, {
+            const res = await fetch(`${API_URL}/api/wishlist/toggle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id, productId: productId })

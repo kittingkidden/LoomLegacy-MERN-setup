@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 const ProductContext = createContext();
 
@@ -13,7 +14,7 @@ export const ProductProvider = ({ children }) => {
 
     const fetchProducts = async () => {
         try {
-            const response = await fetch('http://localhost:5001/api/products');
+            const response = await fetch(`${API_URL}/api/products`);
             if (!response.ok) {
                 throw new Error('Failed to fetch products');
             }
@@ -50,7 +51,7 @@ export const ProductProvider = ({ children }) => {
     const fetchSellerProducts = async (sellerId) => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:5001/api/products/seller/${sellerId}`);
+            const response = await fetch(`${API_URL}/api/products/seller/${sellerId}`);
             if (!response.ok) throw new Error('Failed to fetch seller products');
             const data = await response.json();
             return data.map(item => ({ ...item, id: item._id, price: Number(item.price) }));
@@ -64,7 +65,7 @@ export const ProductProvider = ({ children }) => {
 
     const addProduct = async (newProductData) => {
         try {
-            const response = await fetch('http://localhost:5001/api/products', {
+            const response = await fetch(`${API_URL}/api/products`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

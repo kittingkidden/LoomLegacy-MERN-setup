@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 // Layout Components
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import { API_URL } from './config';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -21,7 +22,7 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/health-check')
+    fetch(`${API_URL}/api/health-check`)
       .then(res => res.json())
       .then(data => setIsConnected(data.database.includes('✅')))
       .catch(() => setIsConnected(false));

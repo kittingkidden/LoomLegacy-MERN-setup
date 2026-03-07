@@ -5,6 +5,7 @@ import ProductCard from '../components/ui/ProductCard';
 import QuickViewModal from '../components/ui/QuickViewModal';
 import { useProducts } from '../context/ProductContext';
 import { Search, Filter, Leaf, ChevronDown } from 'lucide-react';
+import { API_URL } from '../config';
 
 const ShopPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +25,7 @@ const ShopPage = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await fetch('http://localhost:5001/api/categories');
+                const res = await fetch(`${API_URL}/api/categories`);
                 if (res.ok) {
                     const data = await res.json();
                     setCategoriesData(data);
