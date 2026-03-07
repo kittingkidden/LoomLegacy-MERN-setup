@@ -1,32 +1,60 @@
-import { useEffect, useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+// Layout Components
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
+
+// Pages
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import ShopPage from './pages/ShopPage';
+import OurStoryPage from './pages/OurStoryPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import BuyerDashboard from './pages/buyer/BuyerDashboard';
+import SellerDashboard from './pages/seller/SellerDashboard';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
-  // We keep this tiny piece of state just to know we're still connected
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/health-check')
+    fetch('http://localhost:5001/api/health-check')
       .then(res => res.json())
       .then(data => setIsConnected(data.database.includes('✅')))
       .catch(() => setIsConnected(false));
   }, []);
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
-      <h1>LoomLegacy</h1>
-      <p style={{ color: isConnected ? '#4CAF50' : '#f44336', fontSize: '12px' }}>
-        ● {isConnected ? 'System Online' : 'System Offline'}
-      </p>
+    <Router>
+      <div className="flex flex-col min-h-screen">
+        {/* Connection Status Bar (Tiny & subtle at the very top) */}
+        <div className={`h-1 w-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? 'Database Online' : 'Database Offline'} />
 
-      <hr style={{ width: '50%', margin: '20px auto', opacity: '0.3' }} />
+        <Navbar />
 
-      {/* This is where your actual app content starts */}
-      <div className="content">
-        <h2>Welcome to the Legacy</h2>
-        <p>Ready to start building your features.</p>
+        <main className="grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/our-story" element={<OurStoryPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/dashboard" element={<BuyerDashboard />} />
+            <Route path="/seller/SellerDashboard" element={<SellerDashboard />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Add more routes as you move more files */}
+          </Routes>
+        </main>
+
+        <Footer />
       </div>
-    </div>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;

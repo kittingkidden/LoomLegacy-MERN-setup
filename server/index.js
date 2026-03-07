@@ -1,15 +1,25 @@
-require('dotenv').config(); // Load the .env file
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+import 'dotenv/config';
+import dns from "dns";
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+// dns.setDefaultResultOrder("ipv4first");
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ LOCAL DATABASE CONNECTED!"))
-    .catch(err => console.log("❌ Local Error:", err.message));
+const dbURI = (process.env.MONGODB_URI || '').replace(/[^\x20-\x7E]/g, '');
+console.log("DB_URI SANITIZED LENGTH:", dbURI.length);
+
+mongoose.connect(dbURI)
+    .then(() => console.log("✅ MongoDB Connected"))
+    .catch(err => {
+        console.log("❌ Connection Error Name:", err.name);
+        console.log("❌ Connection Error Message:", err.message);
+    });
 
 app.get('/api/status', (req, res) => {
     // Check if Mongoose is connected (1 = connected)
@@ -21,6 +31,20 @@ app.get('/api/status', (req, res) => {
         project: "LoomLegacy"
     });
 });
+
+import productRoutes from './routes/productRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import wishlistRoutes from './routes/wishlistRoutes.js';
+
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // Add this near your other routes in server/index.js
 app.get('/api/health-check', (req, res) => {
@@ -39,4 +63,6 @@ app.get('/api/health-check', (req, res) => {
     });
 });
 
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
