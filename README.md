@@ -28,7 +28,12 @@ LoomLegacy is a specialized e-commerce platform designed to bridge the gap betwe
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB Community Edition (Mongoose ODM)
 
-## 🚀 How to Run the Project
+## 🌍 Live Deployment
+The application is deployed and accessible online:
+- **Backend API (Render):** `https://loomlegacy-server.onrender.com`
+- **Frontend (Vercel):** Hosted on Vercel (Check your Vercel dashboard for the live `.vercel.app` link)
+
+## 🚀 How to Run the Project Locally
 
 ### Prerequisites
 - Node.js installed on your machine.
@@ -53,13 +58,17 @@ PORT=5001
 ```
 
 ### 3. Setup Client Environment
-Navigate to the `client` directory and install dependencies.
+Navigate to the `client` directory, install dependencies, and create a `.env` file.
 ```bash
 cd ../client
 npm install
 ```
+Create a `.env` file in the `client` directory:
+```env
+VITE_API_URL=http://localhost:5001
+```
 
-### 4. Start the Application
+### 4. Start the Application Locally
 You will need two terminal windows to run both the frontend and backend servers simultaneously.
 
 **Terminal 1 (Backend):**
