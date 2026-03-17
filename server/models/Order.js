@@ -30,12 +30,31 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+        enum: ['pending', 'processing', 'dispatched', 'shipped', 'delivered', 'cancelled'],
         default: 'pending',
     },
     shippingAddress: {
         type: String,
         required: true,
+    },
+    paymentMethod: {
+        type: String,
+        enum: ['card', 'upi', 'cod'],
+        required: true,
+        default: 'cod'
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'failed'],
+        default: 'pending'
+    },
+    delivery: {
+        partnerName: String,
+        partnerPhone: String,
+        partnerPaymentDetails: String,
+        pickupDate: Date,
+        distanceKm: Number,
+        deliveryCost: Number // Auto-calculated based on distance
     },
     createdAt: {
         type: Date,

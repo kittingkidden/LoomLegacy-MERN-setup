@@ -44,7 +44,11 @@ const seedData = async () => {
                 ]
             });
         }
-        console.log("👤 Verified/Created Demo Users");
+        let admin = await User.findOne({ email: 'admin@loomlegacy.com' });
+        if (!admin) {
+            admin = await User.create({ name: 'Loom Admin', email: 'admin@loomlegacy.com', password: 'admin', role: 'admin' });
+        }
+        console.log("👤 Verified/Created Demo Users (including Admin)");
 
         // --- 3. CATEGORIES ---
         const mockCategories = [

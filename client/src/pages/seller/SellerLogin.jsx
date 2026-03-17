@@ -23,7 +23,7 @@ const SellerLogin = () => {
         } else {
             const success = await login(email, password, 'seller');
             if (success) {
-                navigate('/seller/SellerDashboard');
+                navigate('/seller/dashboard');
             } else {
                 alert('Login failed. Please check your credentials.');
             }

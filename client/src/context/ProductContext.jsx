@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_URL } from '../config';
 
@@ -46,6 +47,7 @@ export const ProductProvider = ({ children }) => {
 
     useEffect(() => {
         fetchProducts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchSellerProducts = async (sellerId) => {
@@ -89,9 +91,36 @@ export const ProductProvider = ({ children }) => {
         }
     };
 
-    const deleteProduct = (id) => {
-        // TODO: Implement API delete
-        setProducts(prev => prev.filter(product => product.id !== id && product._id !== id));
+    const updateProduct = async (id, updatedData) => {
+        try {
+            const response = await fetch(`${API_URL}/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData),
+            });
+            if (!response.ok) throw new Error('Failed to update product');
+            const data = await response.json();
+            const mapped = { ...data, id: data._id, price: Number(data.price) };
+            setProducts(prev => prev.map(p => (p.id === id || p._id === id) ? mapped : p));
+            return true;
+        } catch (err) {
+            console.error("Error updating product:", err);
+            return false;
+        }
+    };
+
+    const deleteProduct = async (id) => {
+        try {
+            const response = await fetch(`${API_URL}/api/products/${id}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) throw new Error('Failed to delete product');
+            setProducts(prev => prev.filter(product => product.id !== id && product._id !== id));
+            return true;
+        } catch (err) {
+            console.error("Error deleting product:", err);
+            return false;
+        }
     };
 
     const getProductById = (id) => {
@@ -103,6 +132,7 @@ export const ProductProvider = ({ children }) => {
         loading,
         error,
         addProduct,
+        updateProduct,
         deleteProduct,
         getProductById,
         fetchSellerProducts

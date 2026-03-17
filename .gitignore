@@ -1,8 +1,32 @@
+# Dependencies
 node_modules/
-.env
 
-node_modules/
+# Environment Variables
 .env
-.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Large Data Files (CSV)
+*.csv
+server/scripts/*.csv
+
+# Build Output
 dist/
+dist-ssr/
+build/
 
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.sln
+*.sw?
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Brain Artifacts (Agent Context)
+brain/

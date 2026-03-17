@@ -38,6 +38,29 @@ const HomePage = () => {
     const yHero = useTransform(scrollY, [0, 500], [0, 100]);
 
     const [reviews, setReviews] = React.useState([]);
+    const [timeLeft, setTimeLeft] = React.useState({ hours: 2, minutes: 14, seconds: 45 });
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft(prev => {
+                let { hours, minutes, seconds } = prev;
+                if (hours === 0 && minutes === 0 && seconds === 0) return prev;
+                if (seconds > 0) {
+                    seconds--;
+                } else {
+                    seconds = 59;
+                    if (minutes > 0) {
+                        minutes--;
+                    } else {
+                        minutes = 59;
+                        if (hours > 0) hours--;
+                    }
+                }
+                return { hours, minutes, seconds };
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     React.useEffect(() => {
         const fetchReviews = async () => {
@@ -250,14 +273,18 @@ const HomePage = () => {
                     <div>
                         <span className="bg-lime-400 text-stone-900 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-sm mb-3 inline-block animate-pulse italic">Coming Soon</span>
 
-                        <h2 className="font-display text-5xl font-bold text-white mb-2">Monsoon Edit</h2>
-                        <p className="text-stone-400">Rain-washed linens. Limited run of 50 pieces.</p>
+                        <h2 className="font-display text-5xl font-bold text-white mb-2">Summer Edit</h2>
+                        <p className="text-stone-400">Sun-kissed cottons. Limited run of 50 pieces.</p>
 
                     </div>
                     <div className="flex gap-4 text-center">
 
 
-                        {["02", "14", "45"].map((time, i) => (
+                        {[
+                            timeLeft.hours.toString().padStart(2, '0'),
+                            timeLeft.minutes.toString().padStart(2, '0'),
+                            timeLeft.seconds.toString().padStart(2, '0')
+                        ].map((time, i) => (
                             <div key={i} className="bg-stone-800 p-4 rounded-xl min-w-[80px] border border-stone-700">
                                 <span className="block text-3xl font-bold font-mono text-lime-400">{time}</span>
                                 <span className="text-[10px] uppercase text-stone-500 tracking-wider">{["Hrs", "Mins", "Secs"][i]}</span>

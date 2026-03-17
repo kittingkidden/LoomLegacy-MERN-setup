@@ -1,11 +1,21 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { X, ShoppingBag, Star, Share2, ShieldCheck, Truck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import RippleButton from './RippleButton';
 
 const QuickViewModal = ({ product, isOpen, onClose }) => {
-    const { addToCart } = useCart();
+    const navigate = useNavigate();
+    const { addToCart, isGuest } = useCart();
+
+    const handleAddToCart = () => {
+        addToCart(product);
+        onClose();
+        if (isGuest) {
+            navigate('/login?redirect=/cart');
+        }
+    };
 
     if (!isOpen || !product) return null;
 
@@ -38,28 +48,36 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
 
                         {/* Image Section */}
                         <div className="w-full md:w-1/2 bg-stone-100 relative h-64 md:h-auto overflow-hidden">
-                            <div className={`w-full h-full flex items-center justify-center ${(() => {
-                                const colors = [
-                                    'bg-red-100 text-red-700',
-                                    'bg-blue-100 text-blue-700',
-                                    'bg-green-100 text-green-700',
-                                    'bg-amber-100 text-amber-700',
-                                    'bg-purple-100 text-purple-700',
-                                    'bg-pink-100 text-pink-700',
-                                    'bg-teal-100 text-teal-700',
-                                    'bg-indigo-100 text-indigo-700'
-                                ];
-                                return colors[(product.id || 0) % colors.length];
-                            })()}`}>
-                                <span className="font-display font-bold text-9xl opacity-90 tracking-tighter">
-                                    {product.name
-                                        .split(' ')
-                                        .map(word => word[0])
-                                        .join('')
-                                        .substring(0, 2)
-                                        .toUpperCase()}
-                                </span>
-                            </div>
+                            {product.image ? (
+                                <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className={`w-full h-full flex items-center justify-center ${(() => {
+                                    const colors = [
+                                        'bg-red-100 text-red-700',
+                                        'bg-blue-100 text-blue-700',
+                                        'bg-green-100 text-green-700',
+                                        'bg-amber-100 text-amber-700',
+                                        'bg-purple-100 text-purple-700',
+                                        'bg-pink-100 text-pink-700',
+                                        'bg-teal-100 text-teal-700',
+                                        'bg-indigo-100 text-indigo-700'
+                                    ];
+                                    return colors[(product.id || product._id || 0) % colors.length];
+                                })()}`}>
+                                    <span className="font-display font-bold text-9xl opacity-90 tracking-tighter">
+                                        {product.name
+                                            .split(' ')
+                                            .map(word => word[0])
+                                            .join('')
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                    </span>
+                                </div>
+                            )}
                             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-stone-800 flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> In Stock
                             </div>
@@ -106,7 +124,7 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
 
                             <div className="mt-auto space-y-4">
                                 <RippleButton
-                                    onClick={() => { addToCart(product); onClose(); }}
+                                    onClick={handleAddToCart}
                                     className="w-full bg-stone-900 text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:bg-terracotta-600 transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     <ShoppingBag size={18} /> Add to Wardrobe

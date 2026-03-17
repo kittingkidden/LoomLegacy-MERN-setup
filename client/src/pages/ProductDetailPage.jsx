@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, Star, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
@@ -7,7 +7,16 @@ import { motion } from 'framer-motion';
 
 const ProductDetailPage = () => {
     const { id } = useParams();
-    const { addToCart } = useCart();
+    const navigate = useNavigate();
+    const { addToCart, isGuest } = useCart();
+
+    const handleAddToCart = () => {
+        addToCart(product);
+        if (isGuest) {
+            navigate('/login?redirect=/cart');
+        }
+    };
+
     const { getProductById } = useProducts();
     const product = getProductById(id);
 
@@ -31,28 +40,36 @@ const ProductDetailPage = () => {
                         transition={{ duration: 0.6 }}
                         className="rounded-3xl overflow-hidden shadow-2xl shadow-stone-200 border border-white relative group cursor-zoom-in aspect-3/4"
                     >
-                        <div className={`w-full h-full flex items-center justify-center ${(() => {
-                            const colors = [
-                                'bg-red-100 text-red-700',
-                                'bg-blue-100 text-blue-700',
-                                'bg-green-100 text-green-700',
-                                'bg-amber-100 text-amber-700',
-                                'bg-purple-100 text-purple-700',
-                                'bg-pink-100 text-pink-700',
-                                'bg-teal-100 text-teal-700',
-                                'bg-indigo-100 text-indigo-700'
-                            ];
-                            return colors[(product.id || 0) % colors.length];
-                        })()}`}>
-                            <span className="font-display font-bold text-[10rem] md:text-[14rem] opacity-90 tracking-tighter">
-                                {product.name
-                                    .split(' ')
-                                    .map(word => word[0])
-                                    .join('')
-                                    .substring(0, 2)
-                                    .toUpperCase()}
-                            </span>
-                        </div>
+                        {product.image ? (
+                            <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                        ) : (
+                            <div className={`w-full h-full flex items-center justify-center ${(() => {
+                                const colors = [
+                                    'bg-red-100 text-red-700',
+                                    'bg-blue-100 text-blue-700',
+                                    'bg-green-100 text-green-700',
+                                    'bg-amber-100 text-amber-700',
+                                    'bg-purple-100 text-purple-700',
+                                    'bg-pink-100 text-pink-700',
+                                    'bg-teal-100 text-teal-700',
+                                    'bg-indigo-100 text-indigo-700'
+                                ];
+                                return colors[(product.id || 0) % colors.length];
+                            })()}`}>
+                                <span className="font-display font-bold text-[10rem] md:text-[14rem] opacity-90 tracking-tighter">
+                                    {product.name
+                                        .split(' ')
+                                        .map(word => word[0])
+                                        .join('')
+                                        .substring(0, 2)
+                                        .toUpperCase()}
+                                </span>
+                            </div>
+                        )}
                         <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                             View Details
                         </div>
@@ -104,9 +121,26 @@ const ProductDetailPage = () => {
                         </div>
                     </motion.div>
 
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-4xl font-bold text-stone-900 font-display flex items-baseline gap-2">
-                        ₹{product.price.toLocaleString()}
-                        <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">-15% with WHEEL</span>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="space-y-4">
+                        <div className="text-4xl font-bold text-stone-900 font-display flex items-baseline gap-2">
+                            ₹{product.price.toLocaleString()}
+                            <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">-15% with WHEEL</span>
+                        </div>
+                        
+                        {/* Inventory Status */}
+                        <div className="flex items-center gap-2">
+                            {product.stock > 0 ? (
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold ring-1 ring-green-600/10">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-600"></div>
+                                    {product.stock <= 10 ? `Only ${product.stock} available in stock` : 'In Stock & Ready to Ship'}
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold ring-1 ring-red-600/10">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></div>
+                                    Currently Out of Stock
+                                </div>
+                            )}
+                        </div>
                     </motion.div>
 
                     {/* Impact Card */}
@@ -147,11 +181,16 @@ const ProductDetailPage = () => {
 
                     <div className="pt-4">
                         <button
-                            onClick={() => addToCart(product)}
-                            className="w-full bg-stone-900 text-white py-5 rounded-full font-bold text-xl hover:bg-terracotta-600 transition-all active:scale-95 shadow-xl hover:shadow-2xl hover:shadow-terracotta-200 flex items-center justify-center gap-3 relative overflow-hidden"
+                            onClick={handleAddToCart}
+                            disabled={!product.stock || product.stock <= 0}
+                            className={`w-full py-5 rounded-full font-bold text-xl transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 relative overflow-hidden
+                                ${product.stock > 0 
+                                    ? 'bg-stone-900 text-white hover:bg-terracotta-600 hover:shadow-2xl hover:shadow-terracotta-200' 
+                                    : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'}`}
                         >
                             <span className="relative z-10 flex items-center gap-3">
-                                <ShoppingBag size={24} /> Add to Wardrobe
+                                <ShoppingBag size={24} /> 
+                                {product.stock > 0 ? 'Add to Wardrobe' : 'Out of Stock'}
                             </span>
                         </button>
                         <p className="text-center text-xs text-stone-400 mt-4 flex items-center justify-center gap-1">

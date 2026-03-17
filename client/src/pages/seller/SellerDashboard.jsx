@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart3, Package, Upload, Plus, Trash2, Edit, Search, Filter, ArrowUpRight, ShoppingCart, Settings, Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../context/ProductContext';
@@ -16,18 +16,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-// seeded
-const data = [
-    /*
-    { name: 'Jan', sales: 4000 },
-    { name: 'Feb', sales: 3000 },
-    { name: 'Mar', sales: 2000 },
-    { name: 'Apr', sales: 2780 },
-    { name: 'May', sales: 1890 },
-    { name: 'Jun', sales: 2390 },
-    { name: 'Jul', sales: 3490 },
-    */
-];
+
 
 const SellerDashboard = () => {
     const { user } = useAuth();
@@ -44,6 +33,7 @@ const SellerDashboard = () => {
         category: 'Saree',
         material: '',
         description: '',
+        stock: 0,
         image: null
     });
 
@@ -72,10 +62,12 @@ const SellerDashboard = () => {
                     const monthlySales = {};
                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                     orderData.forEach(order => {
-                        const date = new Date(order.createdAt);
-                        const month = monthNames[date.getMonth()];
-                        if (!monthlySales[month]) monthlySales[month] = 0;
-                        monthlySales[month] += order.totalAmount;
+                        if (order.paymentStatus === 'paid') {
+                            const date = new Date(order.createdAt);
+                            const month = monthNames[date.getMonth()];
+                            if (!monthlySales[month]) monthlySales[month] = 0;
+                            monthlySales[month] += order.totalAmount;
+                        }
                     });
 
                     const parsedData = Object.keys(monthlySales).map(key => ({
@@ -92,6 +84,7 @@ const SellerDashboard = () => {
             }
         };
         loadSellerData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
 
@@ -129,13 +122,14 @@ const SellerDashboard = () => {
             ...newProduct,
             price: Number(newProduct.price),
             image: newProduct.image || "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?q=80&w=600&auto=format&fit=crop",
+            stock: Number(newProduct.stock) || 0,
             artisan: user ? user.name : "Artisan",
             seller: user?.id
         };
         const success = await addProduct(productToAdd);
         if (success) {
             alert('Product added successfully!');
-            setNewProduct({ name: '', price: '', category: 'Saree', material: '', description: '', image: null });
+            setNewProduct({ name: '', price: '', category: 'Saree', material: '', description: '', stock: 0, image: null });
             // Refresh local list
             const updatedProds = await fetchSellerProducts(user.id);
             setSellerProducts(updatedProds);
@@ -233,7 +227,7 @@ const SellerDashboard = () => {
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {[
-                                        { title: 'Total Revenue', value: `₹${orders.reduce((acc, curr) => acc + curr.totalAmount, 0).toLocaleString()}`, change: null, note: 'Net sales' },
+                                        { title: 'Total Revenue', value: `₹${orders.filter(o => o.paymentStatus === 'paid').reduce((acc, curr) => acc + curr.totalAmount, 0).toLocaleString()}`, change: null, note: 'Net sales (excluding COD pending)' },
                                         { title: 'Total Orders', value: orders.length, change: null, note: 'Lifetime orders' },
                                         { title: 'Active Listings', value: sellerProducts.length, change: null, note: 'Maximum limit: 50' }
                                     ].map((stat, i) => (
@@ -287,12 +281,16 @@ const SellerDashboard = () => {
                                         ) : orders.slice(0, 3).map((order) => (
                                             <div key={order._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-stone-50 rounded-xl">
                                                 <div>
-                                                    <p className="font-bold text-stone-800">{order.shippingAddress.split(',')[0]}</p>
-                                                    <p className="text-sm text-stone-500">{order.products.length} {order.products.length === 1 ? 'item' : 'items'}</p>
+                                                    <p className="font-bold text-stone-800">Order to: {order.shippingAddress}</p>
+                                                    <div className="text-sm text-stone-500 mt-1">
+                                                        {order.products.map((p, idx) => (
+                                                            <p key={idx}>{p.quantity}x {p.product?.name || 'Unknown Product'}</p>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                                 <div className="mt-2 sm:mt-0 text-right">
                                                     <p className="font-mono font-bold text-stone-800">₹{order.totalAmount.toLocaleString()}</p>
-                                                    <p className="text-xs text-stone-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                                    <p className="text-xs text-stone-500">{new Date(order.createdAt).toLocaleDateString()} • {order.paymentMethod ? order.paymentMethod.toUpperCase() : 'UNKNOWN'}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -356,6 +354,19 @@ const SellerDashboard = () => {
                                                             placeholder="0.00"
                                                         />
                                                     </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-stone-700 mb-2">Available Stock</label>
+                                                    <input
+                                                        name="stock"
+                                                        value={newProduct.stock}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                        type="number"
+                                                        min="0"
+                                                        className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition-all"
+                                                        placeholder="e.g. 50"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-bold text-stone-700 mb-2">Category</label>
@@ -462,7 +473,7 @@ const SellerDashboard = () => {
                                                 <th className="px-8 py-4">Product</th>
                                                 <th className="px-6 py-4">Category</th>
                                                 <th className="px-6 py-4">Price</th>
-                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Stock</th>
                                                 <th className="px-6 py-4 text-right">Actions</th>
                                             </tr>
                                         </thead>
@@ -489,9 +500,31 @@ const SellerDashboard = () => {
                                                         </td>
                                                         <td className="px-6 py-4"><span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-medium">{product.category}</span></td>
                                                         <td className="px-6 py-4 font-bold font-mono text-stone-700">₹{product.price.toLocaleString()}</td>
-                                                        <td className="px-6 py-4"><span className="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold ring-1 ring-green-600/20 flex w-fit items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>Active</span></td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ring-1 flex items-center gap-1
+                                                                    ${product.stock > 10 ? 'bg-green-100 text-green-700 ring-green-600/20' : 
+                                                                      product.stock > 0 ? 'bg-amber-100 text-amber-700 ring-amber-600/20' : 
+                                                                      'bg-red-100 text-red-700 ring-red-600/20'}`}>
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${product.stock > 10 ? 'bg-green-600' : product.stock > 0 ? 'bg-amber-600' : 'bg-red-600'}`}></span>
+                                                                    {product.stock} units
+                                                                </span>
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4 text-right space-x-1">
-                                                            <button className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors"><Edit size={16} /></button>
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    const newStock = prompt('Enter new stock quantity:', product.stock);
+                                                                    if (newStock !== null) {
+                                                                        const success = await updateProduct(product.id || product._id, { stock: Number(newStock) });
+                                                                        if (success) {
+                                                                            setSellerProducts(prev => prev.map(p => (p.id === product.id || p._id === product._id) ? { ...p, stock: Number(newStock) } : p));
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors" title="Update Stock">
+                                                                <Save size={16} />
+                                                            </button>
                                                             <button onClick={() => handleDelete(product.id)} className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
                                                         </td>
                                                     </tr>
@@ -527,10 +560,11 @@ const SellerDashboard = () => {
                                         <thead className="bg-stone-100/50 text-stone-800 font-bold uppercase text-xs tracking-wider">
                                             <tr>
                                                 <th className="px-8 py-4">Order ID</th>
-                                                <th className="px-6 py-4">Customer</th>
+                                                <th className="px-6 py-4">Destination</th>
                                                 <th className="px-6 py-4">Items</th>
                                                 <th className="px-6 py-4">Total</th>
-                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Payment</th>
+                                                <th className="px-6 py-4">Fulfillment</th>
                                                 <th className="px-6 py-4 text-right">Action</th>
                                             </tr>
                                         </thead>
@@ -542,9 +576,26 @@ const SellerDashboard = () => {
                                             ) : orders.map((order) => (
                                                 <tr key={order._id} className="hover:bg-stone-50 transition-colors">
                                                     <td className="px-8 py-4 font-bold text-stone-800">#{order._id.substring(order._id.length - 6).toUpperCase()}</td>
-                                                    <td className="px-6 py-4">{order.shippingAddress.split(',')[0]}</td>
-                                                    <td className="px-6 py-4 text-stone-500 truncate max-w-xs">{order.products.length} items</td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="font-bold text-stone-800 text-sm max-w-[200px] truncate" title={order.shippingAddress}>{order.shippingAddress}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-stone-500 text-sm">
+                                                        <div className="flex flex-col gap-1">
+                                                        {order.products.map((p, idx) => (
+                                                            <span key={idx} className="truncate max-w-[150px]" title={p.product?.name}>
+                                                                {p.quantity}x {p.product?.name || 'Unknown Product'}
+                                                            </span>
+                                                        ))}
+                                                        </div>
+                                                    </td>
                                                     <td className="px-6 py-4 font-mono font-bold text-stone-700">₹{order.totalAmount.toLocaleString()}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block
+                                                            ${order.paymentStatus === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                                                'bg-green-100 text-green-700'}`}>
+                                                            {order.paymentMethod ? order.paymentMethod.toUpperCase() : 'N/A'}: {order.paymentStatus || 'pending'}
+                                                        </span>
+                                                    </td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block
                                                             ${order.status === 'pending' ? 'bg-amber-100 text-amber-700' :
@@ -554,7 +605,7 @@ const SellerDashboard = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <button className="text-stone-400 hover:text-terracotta-600 font-medium">Manage</button>
+                                                        <Link to={`/seller/order/${order._id}/manage`} className="text-stone-400 hover:text-terracotta-600 font-medium whitespace-nowrap">Manage &#8594;</Link>
                                                     </td>
                                                 </tr>
                                             ))}

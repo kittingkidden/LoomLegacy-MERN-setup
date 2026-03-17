@@ -18,6 +18,7 @@ const Navbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Shop', path: '/shop' },
+        { name: 'Artisans', path: '/artisans' },
         { name: 'Why We Exist', path: '/our-story' },
     ];
 
@@ -80,7 +81,7 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center space-x-6">
                                 <Link
-                                    to={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller/SellerDashboard' : '/dashboard'}
+                                    to={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller/dashboard' : '/dashboard'}
                                     className="text-stone-600 hover:text-terracotta-600 transition-colors"
                                     title="Dashboard"
                                 >
@@ -178,7 +179,7 @@ const Navbar = () => {
                                 {user && (
                                     <div className="space-y-4">
                                         <Link
-                                            to={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller/SellerDashboard' : '/dashboard'}
+                                            to={user.role === 'admin' ? '/admin' : user.role === 'seller' ? '/seller/dashboard' : '/dashboard'}
                                             className="flex items-center gap-2 text-lg font-medium text-stone-600"
                                             onClick={() => setIsMenuOpen(false)}
                                         >

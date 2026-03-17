@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState } from 'react';
 import { API_URL } from '../config';
 
 const AuthContext = createContext();
@@ -6,15 +7,11 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-
-    // Check for persisted session on mount
-    useEffect(() => {
+    const [user, setUser] = useState(() => {
         const storedUser = localStorage.getItem('loom_user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-    }, []);
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+
 
     const login = async (email, password) => {
         try {

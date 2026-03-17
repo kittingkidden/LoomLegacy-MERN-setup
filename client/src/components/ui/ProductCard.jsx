@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ShoppingBag, Star, Heart, Eye, Clock, Truck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import RippleButton from './RippleButton';
 
 const ProductCard = ({ product, onQuickView }) => { // Added onQuickView prop
-    const { addToCart } = useCart();
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { addToCart, isGuest } = useCart();
     const { isInWishlist, toggleWishlist } = useWishlist();
+
+    const handleAddToCart = (e) => {
+        e.preventDefault();
+        addToCart(product);
+        if (isGuest) {
+            navigate('/login?redirect=/cart');
+        }
+    };
 
     const isWishlisted = isInWishlist(product.id || product._id);
 
@@ -52,12 +59,20 @@ const ProductCard = ({ product, onQuickView }) => { // Added onQuickView prop
             className="bg-white rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-stone-100 group relative"
         >
             <div className="relative h-72 overflow-hidden bg-stone-100">
-                <Link to={`/product/${product.id}`} className="block w-full h-full">
-                    <div className={`w-full h-full flex items-center justify-center ${getPlaceholderColor(product.id || 0)}`}>
-                        <span className="font-display font-bold text-6xl opacity-90 tracking-tighter">
-                            {getInitials(product.name)}
-                        </span>
-                    </div>
+                <Link to={`/product/${product.id || product._id}`} className="block w-full h-full">
+                    {product.image ? (
+                        <img 
+                            src={product.image} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        />
+                    ) : (
+                        <div className={`w-full h-full flex items-center justify-center ${getPlaceholderColor(product.id || product._id || 0)}`}>
+                            <span className="font-display font-bold text-6xl opacity-90 tracking-tighter">
+                                {getInitials(product.name)}
+                            </span>
+                        </div>
+                    )}
                 </Link>
 
                 {/* Badges */}
@@ -69,6 +84,16 @@ const ProductCard = ({ product, onQuickView }) => { // Added onQuickView prop
                         <div className="bg-lime-100/90 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] font-bold text-lime-800 uppercase tracking-widest shadow-sm flex items-center gap-1">
                             <Truck size={10} /> 7-Day Del
                         </div>
+                    )}
+                    {product.stock <= 5 && product.stock > 0 && (
+                       <div className="bg-amber-100/95 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] font-bold text-amber-800 uppercase tracking-widest border border-amber-200 shadow-sm">
+                           Only {product.stock} left
+                       </div>
+                    )}
+                    {product.stock <= 0 && (
+                       <div className="bg-red-100/95 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] font-bold text-red-800 uppercase tracking-widest border border-red-200 shadow-sm">
+                           Out of Stock
+                       </div>
                     )}
                 </div>
 
@@ -109,7 +134,7 @@ const ProductCard = ({ product, onQuickView }) => { // Added onQuickView prop
 
             <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
-                    <Link to={`/product/${product.id}`} className="group-hover:text-terracotta-700 transition-colors">
+                    <Link to={`/product/${product.id || product._id}`} className="group-hover:text-terracotta-700 transition-colors">
                         <h3 className="font-display text-lg font-bold text-stone-800 line-clamp-1">{product.name}</h3>
                     </Link>
                     <div className="flex flex-col items-end">
@@ -133,9 +158,15 @@ const ProductCard = ({ product, onQuickView }) => { // Added onQuickView prop
                         <Clock size={12} /> Made to order
                     </div>
                     <RippleButton
-                        onClick={() => addToCart(product)}
-                        className="bg-stone-900 hover:bg-terracotta-600 text-white p-2.5 rounded-full shadow-lg hover:shadow-terracotta-200 transition-all active:scale-95"
-                        title="Add to Cart"
+                        onClick={(e) => {
+                            if (product.stock > 0) handleAddToCart(e);
+                        }}
+                        disabled={product.stock <= 0}
+                        className={`p-2.5 rounded-full shadow-lg transition-all active:scale-95
+                            ${product.stock > 0 
+                                ? 'bg-stone-900 hover:bg-terracotta-600 text-white hover:shadow-terracotta-200' 
+                                : 'bg-stone-100 text-stone-300 cursor-not-allowed shadow-none'}`}
+                        title={product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                     >
                         <ShoppingBag size={18} />
                     </RippleButton>

@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Trash2, ShieldCheck } from 'lucide-react';
+import { Trash2, ShieldCheck, Minus, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const CartPage = () => {
-    const { cartItems, removeFromCart, total, subtotal, discount, isPrepaid, setIsPrepaid } = useCart();
+    const { cartItems, removeFromCart, updateQuantity, total, subtotal, discount, isPrepaid, setIsPrepaid } = useCart();
     const { user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
         if (user?.role === 'seller') {
-            navigate('/seller/SellerDashboard');
+            navigate('/seller/dashboard');
         }
     }, [user, navigate]);
 
@@ -71,9 +71,23 @@ const CartPage = () => {
                                     </button>
                                 </div>
                                 <p className="text-sm text-stone-500 mb-2">{item.material}</p>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-sm text-stone-600">Qty: {item.quantity}</span>
-                                    <span className="font-bold text-stone-900">₹{(item.price * item.quantity).toLocaleString()}</span>
+                                <div className="flex justify-between items-center mt-4">
+                                    <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-200">
+                                        <button 
+                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm text-stone-500 transition-all border border-transparent hover:border-stone-200"
+                                        >
+                                            <Minus size={14} />
+                                        </button>
+                                        <span className="font-bold text-stone-800 w-4 text-center">{item.quantity}</span>
+                                        <button 
+                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm text-stone-500 transition-all border border-transparent hover:border-stone-200"
+                                        >
+                                            <Plus size={14} />
+                                        </button>
+                                    </div>
+                                    <span className="font-bold text-stone-900 text-lg">₹{(item.price * item.quantity).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>

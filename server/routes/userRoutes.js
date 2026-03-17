@@ -3,6 +3,18 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+// @route   GET api/users
+// @desc    Get all users
+// @access  Public (Should be protected for Admin only)
+router.get('/', async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
 // @route   POST api/users/register
 // @desc    Register a new user
 // @access  Public

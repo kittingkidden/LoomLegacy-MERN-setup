@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -35,13 +36,41 @@ export const CartProvider = ({ children }) => {
     // Refresh cart when user context switches (login/logout)
     useEffect(() => {
         try {
+            // Retrieve current storage based on user state
             const storedCart = localStorage.getItem(cartKey);
-            setCartItems(storedCart ? JSON.parse(storedCart) : []);
+            let parsedCart = storedCart ? JSON.parse(storedCart) : [];
+
+            // MERGE LOGIC: If a user just logged in (cartKey is not guest)
+            // We check the guest cart for pending items to merge into their permanent cart
+            if (user?.id) {
+                const guestCartStr = localStorage.getItem('loom_cart_guest');
+                if (guestCartStr && guestCartStr !== '[]') {
+                    const guestCart = JSON.parse(guestCartStr);
+                    
+                    // Merge guest cart into parsed user cart securely
+                    guestCart.forEach(guestItem => {
+                        const existingIdx = parsedCart.findIndex(item => item.id === guestItem.id);
+                        if (existingIdx >= 0) {
+                            parsedCart[existingIdx].quantity += guestItem.quantity;
+                        } else {
+                            parsedCart.push(guestItem);
+                        }
+                    });
+
+                    // Update storage with merged cart so effect captures it
+                    localStorage.setItem(cartKey, JSON.stringify(parsedCart));
+                    // Clear the guest cart so it doesn't re-merge on next refresh
+                    localStorage.setItem('loom_cart_guest', '[]');
+                }
+            }
+
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setCartItems(parsedCart);
         } catch (error) {
-            console.error("Error parsing cart from localStorage:", error);
+            console.error("Error parsing/merging cart from localStorage:", error);
             setCartItems([]);
         }
-    }, [cartKey]);
+    }, [cartKey, user?.id]);
 
     // Save cart to local storage under the current user's distinct key
     useEffect(() => {
@@ -56,12 +85,44 @@ export const CartProvider = ({ children }) => {
     const addToCart = (product) => {
         setCartItems(prev => {
             const existing = prev.find(item => item.id === product.id);
+            const currentQty = existing ? existing.quantity : 0;
+            const availableStock = product.stock !== undefined ? product.stock : 999;
+
+            if (currentQty >= availableStock) {
+                alert(`Sorry, only ${availableStock} items available in stock.`);
+                return prev;
+            }
+
             if (existing) {
                 return prev.map(item =>
                     item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             }
             return [...prev, { ...product, quantity: 1 }];
+        });
+    };
+
+    /**
+     * Updates the quantity of an item in the cart.
+     * @param {string} id - Product ID.
+     * @param {number} newQuantity - Desired quantity.
+     */
+    const updateQuantity = (id, newQuantity) => {
+        setCartItems(prev => {
+            const item = prev.find(item => item.id === id);
+            if (!item) return prev;
+
+            // Ensure quantity is at least 1
+            const qty = Math.max(1, newQuantity);
+            
+            // Check against stock
+            const availableStock = item.stock !== undefined ? item.stock : 999;
+            if (qty > availableStock) {
+                alert(`Sorry, only ${availableStock} items available in stock.`);
+                return prev.map(i => i.id === id ? { ...i, quantity: availableStock } : i);
+            }
+
+            return prev.map(i => i.id === id ? { ...i, quantity: qty } : i);
         });
     };
 
@@ -79,9 +140,12 @@ export const CartProvider = ({ children }) => {
     const discount = isPrepaid ? subtotal * 0.10 : 0;
     const total = subtotal - discount;
 
+    const isGuest = !user;
+
     const value = {
         cartItems,
         addToCart,
+        updateQuantity,
         removeFromCart,
         clearCart,
         isPrepaid,
@@ -89,6 +153,7 @@ export const CartProvider = ({ children }) => {
         subtotal,
         discount,
         total,
+        isGuest,
         count: cartItems.reduce((acc, item) => acc + item.quantity, 0)
     };
 
